@@ -5,25 +5,21 @@ var options = {
   bg: "#888",
   scolor: "lightgreen",
   acolor: "red",
+  ocolor: "#212121",
   wall: true,
   poison: false,
-  powerup: true
+  powerup: true,
+  map: 1,
+  dark: false
 }
 var fps = 15;
-// var tilewidth = 10;
 var tilewidth = canvas.width/ 50;
 var gameover = false;
 var score = 0;
+var pause = true;
 
 // Food
-// = Math.floor(Math.random() * canvas.width / tilewidth) * tilewidth
-// = Math.floor(Math.random() * canvas.height / tilewidth) * tilewidth
-var ax;
-var ay;
-var vx;
-var vy;
-var px;
-var py;
+var ax,ay,vx,vy,px,py;
 
 //Eating poison means DEATH
 var apple = [[ax,ay]];
@@ -49,26 +45,29 @@ function Player(x,y,md,ms,mw,ma,snake,double) {
 }
 
 window.onload = function () {
+  //width INITIALIZER
   for (var t = 50; (t < window.innerWidth * 0.8) && ( t < window.innerHeight * 0.8); t += 50) {
     canvas.width = t;
   }
   canvas.height = canvas.width;
   tilewidth = canvas.width/50;
   reset();
+
+  //UPDATE CANVAS
   setInterval( function() {
     if(options.wall === true) {canvas.style.border = "2px dashed lightgreen"}
     else if (options.wall === false) {canvas.style.border = "2px solid #666"}
     if (twoplayer) {
       move(player);
-      if (player.double === true) {move(player);}
       move(player2);
-      if (player2.double === true) {move(player2);}
       draw(player,player2);
+      // if (player.double === true) {move(player);}
+      // if (player2.double === true) {move(player2);}
     }
     else if (!twoplayer) {
       move(player);
-      if (!player.double === false) {move(player);}
       draw(player);
+      // if (!player.double === false) {move(player);}
     }
 		menu();
   },1000/fps);
@@ -91,6 +90,7 @@ function reset() {
   options.scolor = "lightgreen";
   options.wall = true;
   options.poison = false;
+  options.dark = false;
   poison = [];
   apple = [[Math.floor(Math.random() * canvas.width / tilewidth) * tilewidth,Math.floor(Math.random() * canvas.height / tilewidth) * tilewidth]];
   powerups = [];
@@ -105,6 +105,7 @@ function reset() {
   player.double = false;
 
   if (twoplayer) {
+    debugger;
     player2.x = canvas.width - 2 * tilewidth;
     player2.y = canvas.height - tilewidth;
     player2.md = 0;
@@ -131,8 +132,8 @@ function menu() {
 	 ctx.fillText("SNAKE", canvas.width/2, canvas.height/2);
    ctx.font = "12px Arial";
    ctx.fillStyle = 'black';
-	 ctx.fillText("Oneplayermode = E", canvas.width/2, canvas.height/2 + 24);
-	 ctx.fillText("Twoplayermode = Z", canvas.width/2, canvas.height/2 + 38);
+	 ctx.fillText("Singleplayer = E", canvas.width/2, canvas.height/2 + 24);
+	 ctx.fillText("Twoplayer = Z", canvas.width/2, canvas.height/2 + 38);
    ctx.fillText("Powerups on/off = P", canvas.width/2, canvas.height - 24);
    if (options.powerup === true) {
      ctx.fillText("Powerups on!", canvas.width/2, canvas.height - 12);
@@ -148,18 +149,29 @@ window.addEventListener("keydown", function(evt) {
   if (evt.keyCode == 69 && !play) {
     evt.preventDefault();
     play = true;
+    console.log("click!");
   }
 
   if (evt.keyCode == 90 && !play) {
     evt.preventDefault();
     play = true;
     twoplayer = true;
+    reset();
+    console.log("click!");
   }
 
   if (evt.keyCode == 80 && !play) {
     evt.preventDefault();
-    if (options.powerup === true) {options.powerup = false;}
-    else if (options.powerup === false) {options.powerup = true;}
+    // if (options.powerup === true) {options.powerup = false;}
+    // else if (options.powerup === false) {options.powerup = true;}
+    options.powerup = !options.powerup;
+    console.log("click!");
+  }
+
+  if (evt.keyCode == 32 && play) {
+    evt.preventDefault();
+    pause= !pause;
+
   }
 
   if (evt.keyCode == 32 && gameover) {
@@ -167,11 +179,13 @@ window.addEventListener("keydown", function(evt) {
     reset();
   }
 
+
   if (evt.keyCode == 77 && gameover) {
     evt.preventDefault();
     reset();
     play = false;
   }
+
 
   if (evt.keyCode == 38) {
     evt.preventDefault();
@@ -263,7 +277,7 @@ function snakegrow(figure,apple) {
 }
 
 function move(figure) {
- if (play == false || figure.stop > 0) {return;}
+ if (play == false || figure.stop > 0 || pause) {return;}
  else if (play) {
 
    //positionchange
@@ -311,7 +325,10 @@ function move(figure) {
    for (var a = 0; a < apple.length; a++) {
      if (figure.x == apple[a][0] && figure.y == apple[a][1]) {
         score += 1;
-        snakegrow(figure,apple[a]);
+        for (var t = 0; t < 100; t++) {
+          snakegrow(figure,apple[a]);
+        }
+        // calculatepos(ax,ay);
         ax = Math.floor(Math.random() * canvas.width / tilewidth) * tilewidth;
         ay = Math.floor(Math.random() * canvas.height/ tilewidth) * tilewidth;
         apple[a] = [];
@@ -329,8 +346,8 @@ function move(figure) {
             px = Math.floor(Math.random() * canvas.width / tilewidth) * tilewidth;
             py = Math.floor(Math.random() * canvas.height/ tilewidth) * tilewidth;
             powerups = [];
-            powerups[0] = [px,py,Math.floor((Math.random()*9) + 1)];
-            // powerups[0] = [px,py,9];
+            powerups[0] = [px,py,Math.floor((Math.random()*8) + 1)];
+            // powerups[0] = [px,py,2];
             if (powerups[0][2] == 8) {powerups[1] = [canvas.width - px - tilewidth,canvas.height - py - tilewidth,8];}
           }
         }
@@ -362,8 +379,10 @@ function power(index,figure) {
     options.scolor = "rgb(" + r + "," + g + "," + b + ")";
   }
   else if (index == 2) {
-    if (figure.double === true) {figure.double = false; return;}
-    if (figure.double === false) {figure.double = true; return;}
+    // if (figure.double === true) {figure.double = false; return;}
+    // if (figure.double === false) {figure.double = true; return;}
+    if (options.dark === true) {options.dark = false; return;}
+    if (options.dark === false) {options.dark = true; return;}
   }
   else if (index == 3) {
     if (options.wall === true) {options.wall = false; return;}
@@ -404,21 +423,32 @@ function power(index,figure) {
   }
 }
 
+// function calculatepos(x,y) {
+//   x = Math.floor(Math.random() * canvas.width / tilewidth) * tilewidth;
+//   y = Math.floor(Math.random() * canvas.height/ tilewidth) * tilewidth;
+// }
+
 function draw() {
   ctx.fillStyle = options.bg;
   ctx.fillRect(0,0,canvas.width,canvas.height);
+  if (options.map == 2) {
+    ctx.fillStyle = options.ocolor;
+    ctx.fillRect(5*tilewidth,5*tilewidth,canvas.width-10*tilewidth,tilewidth);
+  }
+
   document.getElementById('score').innerHTML = score;
   if (gameover) {
     ctx.fillStyle = "black";
     ctx.textBaseline="middle";
     ctx.textAlign = "center";
     ctx.fillText("GAME OVER!", canvas.width/2, canvas.height/2);
-    ctx.fillText("You reached the following score: " + score, canvas.width/2, canvas.height/2 + 12);
-    ctx.fillText("Press the Spacebar to play again.", canvas.width/2, canvas.height - 12);
+    ctx.fillText("You have reached following score: " + score, canvas.width/2, canvas.height/2 + 12);
+    ctx.fillText("Press the spacebar to play again.", canvas.width/2, canvas.height - 12);
     ctx.fillText("Press M to get back to the menu.", canvas.width/2, canvas.height - 24);
   }
 
   else if (!gameover){
+
     ctx.fillStyle = options.acolor;
     for (var a = 0; a < apple.length; a++) {
       ctx.fillRect(apple[a][0],apple[a][1],tilewidth,tilewidth)
@@ -456,6 +486,22 @@ function draw() {
       }
     }
 
+    if (options.dark === true && play) {
+      var radius = 5;
+      // WORKS FOR ONE PLAYER
+      ctx.beginPath();
+      ctx.fillStyle = "black";
+      ctx.rect(0,0,canvas.width,canvas.height);
+      ctx.moveTo(arguments[0].snake[0][0] - radius * tilewidth,arguments[0].snake[0][1] - radius * tilewidth);
+      ctx.rect(arguments[0].snake[0][0] - radius * tilewidth,arguments[0].snake[0][1] - radius * tilewidth, ((2* radius)+1) * tilewidth, ((2 * radius) + 1) * tilewidth);
+      ctx.moveTo(0,0);
+      if (twoplayer) {
+       ctx.moveTo(arguments[1].snake[0][0] - radius * tilewidth,arguments[1].snake[0][1] - radius * tilewidth);
+       ctx.rect(arguments[1].snake[0][0] - radius * tilewidth,arguments[1].snake[0][1] - radius * tilewidth, ((2* radius)+1) * tilewidth, ((2* radius)+1) * tilewidth);
+      }
+    }
+
+    ctx.fill('evenodd');
     ctx.fillStyle = options.scolor;
     for (var k = 0; k < arguments.length; k++) {
       for (var i = 0; i < arguments[k].snake.length; i++) {
@@ -463,11 +509,36 @@ function draw() {
       }
       if (arguments[k].stop > 0) {(arguments[k].stop)--;}
     }
-
-    // for (var i = 0; i < figure.snake.length; i++) {
-    //   ctx.fillRect(figure.snake[i][0],figure.snake[i][1],tilewidth,tilewidth);
-    // }
-    // ctx.fillRect(snake[0],snake[1],tilewidth,tilewidth);
-    // ctx.fillRect(snake[2],snake[3],tilewidth,tilewidth);
   }
 }
+
+//   ctx.fillStyle = "black";
+//   if (arguments.length == 1) {
+//     ctx.fillRect(0,0,arguments[0].snake[0][0] - radius *tilewidth,canvas.height);
+//     ctx.fillRect(arguments[0].snake[0][0] + (radius + 1) *tilewidth,0,canvas.width,canvas.height);
+//     ctx.fillRect(0,0,canvas.width,arguments[0].snake[0][1] - radius *tilewidth);
+//     ctx.fillRect(0,arguments[0].snake[0][1] + (radius + 1) *tilewidth,canvas.width,canvas.height);
+//     // ctx.clearRect(arguments[k].snake[0][0] - 2 *tilewidth,arguments[k].snake[0][1] - 2 * tilewidth,5*tilewidth,5*tilewidth)
+//   }
+//   else if (arguments.length == 2) {
+//     var top,down;
+//     if (arguments[0].snake[0][1] < arguments[1].snake[0][1]) {top = 0; down = 1;}
+//     else {top = 1; down = 0;}
+//
+//     ctx.fillRect(0,0,canvas.width,arguments[top].snake[0][1] - radius *tilewidth);
+//     if ((arguments[down].snake[0][1] - radius *tilewidth) - (arguments[top].snake[0][1] + radius *tilewidth) > 0) {
+//       ctx.fillRect(0,arguments[top].snake[0][1] + radius *tilewidth,canvas.width,(arguments[down].snake[0][1] - radius *tilewidth) - (arguments[top].snake[0][1] + radius *tilewidth))
+//     }
+//     ctx.fillRect(0,arguments[down].snake[0][1] + radius *tilewidth,canvas.width,canvas.height);
+//
+//     var right,left;
+//     if (arguments[0].snake[0][0] < arguments[1].snake[0][0]) {right = 0; left = 1}
+//     else {right = 1; left = 0;}
+//
+//     ctx.fillRect(0,0,arguments[right].snake[0][0] - radius *tilewidth,canvas.height);
+//     if ((arguments[left].snake[0][0] - radius *tilewidth) - (arguments[right].snake[0][0] + radius *tilewidth) > 0) {
+//       ctx.fillRect(arguments[right].snake[0][0] + radius *tilewidth,0,(arguments[left].snake[0][0] - radius *tilewidth) - (arguments[right].snake[0][0] + radius *tilewidth),canvas.height)
+//     }
+//     ctx.fillRect(arguments[left].snake[0][0] + radius *tilewidth,0,canvas.width,canvas.height);
+//   }
+//  }
