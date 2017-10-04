@@ -1,0 +1,55 @@
+body {
+    overflow-x: hidden;
+    margin:0;
+		padding:0;
+    background-color: black;
+		color:white;
+		text-indent:0px;
+		letter-spacing: 1px;
+		word-spacing: 3px;
+		font-family:Arial,Helvetica Neue,Helvetica,sans-serif;
+		font-size: 18px;
+    box-sizing: border-box;
+}
+
+
+h1{ display:block;
+    border-radius: 10px 0px 0px 10px;
+    box-shadow: 0px 0px 10px black;
+		text-shadow: -1px 0px black, 1px 0px black, 0px 1px black, 0px -1px black;
+    width: 150px;
+		border:3px solid #212121;
+		padding: 5px 0px 5px 10px;
+		margin:0px;
+		font-size: 20px;
+		font-variant: small-caps;
+		font-weight: 500;
+		line-height: 26.4px;
+		position:fixed;
+		right:0px;
+		top:3%;
+		z-index:10;
+		background-color: lightgreen;
+    transition: all 1s;
+}
+
+h1:hover {
+  color: lightgreen;
+  background-color:black;
+  right:10px;
+  border: 3px solid lightgreen;
+}
+
+canvas {
+  border:2px solid #666;
+  padding:0;
+  margin-top: 50px;
+  margin-left: 50%;
+  transform: translate(-50%,0);
+}
+
+.score {text-align: center;}
+
+@media screen and (max-width: 520px) {
+  h1 {display: none;}
+}
