@@ -16,7 +16,7 @@ var fps = 15;
 var tilewidth = canvas.width/ 50;
 var gameover = false;
 var score = 0;
-var pause = true;
+var pause = false;
 
 // Food
 var ax,ay,vx,vy,px,py;
@@ -94,6 +94,7 @@ function reset() {
   poison = [];
   apple = [[Math.floor(Math.random() * canvas.width / tilewidth) * tilewidth,Math.floor(Math.random() * canvas.height / tilewidth) * tilewidth]];
   powerups = [];
+  pause = false;
 
   player.x = tilewidth;
   player.y = 0;
@@ -134,12 +135,13 @@ function menu() {
    ctx.fillStyle = 'black';
 	 ctx.fillText("Singleplayer = E", canvas.width/2, canvas.height/2 + 24);
 	 ctx.fillText("Twoplayer = Z", canvas.width/2, canvas.height/2 + 38);
-   ctx.fillText("Powerups on/off = P", canvas.width/2, canvas.height - 24);
+   ctx.fillText("Hit Enter to pause the game.", canvas.width/2, canvas.height - 12);
+   ctx.fillText("Powerups on/off = P", canvas.width/2, canvas.height - 36);
    if (options.powerup === true) {
-     ctx.fillText("Powerups on!", canvas.width/2, canvas.height - 12);
+     ctx.fillText("Powerups on!", canvas.width/2, canvas.height - 24);
    }
    else if (options.powerup === false) {
-     ctx.fillText("Powerups off.", canvas.width/2, canvas.height - 12);
+     ctx.fillText("Powerups off.", canvas.width/2, canvas.height - 24);
    }
   }
 }
@@ -168,7 +170,7 @@ window.addEventListener("keydown", function(evt) {
     console.log("click!");
   }
 
-  if (evt.keyCode == 32 && play) {
+  if (evt.keyCode == 13 && play) {
     evt.preventDefault();
     pause= !pause;
 
@@ -325,7 +327,7 @@ function move(figure) {
    for (var a = 0; a < apple.length; a++) {
      if (figure.x == apple[a][0] && figure.y == apple[a][1]) {
         score += 1;
-        for (var t = 0; t < 100; t++) {
+        for (var t = 0; t < 1; t++) {
           snakegrow(figure,apple[a]);
         }
         // calculatepos(ax,ay);
