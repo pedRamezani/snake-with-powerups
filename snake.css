@@ -12,6 +12,20 @@ body {
     box-sizing: border-box;
 }
 
+button {
+	padding:10px;
+	border-radius:5px;
+  margin-left:50%;
+	transform: translate(-50%,0);
+	font-weight:bold;
+	background-color:#4caf50;
+	border: none;
+	box-shadow: 0px 5px #ccc;
+}
+
+button:active {background-color: #2e7d32; box-shadow: 0px 2px #aaa; transform: translate(-50%,3px);}
+
+
 
 h1{ display:block;
     border-radius: 10px 0px 0px 10px;
