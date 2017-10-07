@@ -1,14 +1,14 @@
 # snake-with-powerups
 SNAKE. WITH. FREAKING. POWERUPS. SOOOO UNORIGINAL! Check the website to play it..
 
-##YOUR GOAL
+## YOUR GOAL
 Eat as many apples as possible.
 
-##Controls
+## Controls
 Use the arrows to controll your snake
 (second player: use w/a/s/d)
 
-##Powerups
+## Powerups
 - ![#000000](https://placehold.it/15/000000/000000?text=+) `Toggles poisonmode.`
 - ![#800080](https://placehold.it/15/800080/000000?text=+) `Poison. Dont touch it if you doesnt want to die.`
 - ![#ffa500](https://placehold.it/15/ffa500/000000?text=+) `Changes your color (random).`
