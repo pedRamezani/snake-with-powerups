@@ -9,14 +9,16 @@ var options = {
   wall: true,
   poison: false,
   powerup: true,
-  map: 1,
+  map: 2,
   dark: false
 }
 var fps = 15;
-var tilewidth = canvas.width/ 50;
+var tilewidth;
 var gameover = false;
 var score = 0;
 var pause = false;
+var map2;
+var collision = [];
 
 // Food
 var ax,ay,vx,vy,px,py;
@@ -44,30 +46,36 @@ function Player(x,y,md,ms,mw,ma,snake,double) {
   this.stop = stop;
 }
 
-window.onload = function () {
+function updateparameters() {
   //width INITIALIZER
   for (var t = 50; (t < window.innerWidth * 0.8) && ( t < window.innerHeight * 0.8); t += 50) {
     canvas.width = t;
   }
   canvas.height = canvas.width;
   tilewidth = canvas.width/50;
+  map2 =
+  [ [[10*tilewidth,10*tilewidth],[40*tilewidth,10*tilewidth],4],
+    [[10*tilewidth,40*tilewidth],[40*tilewidth,40*tilewidth],4],
+    [[10*tilewidth,13*tilewidth],[10*tilewidth,38*tilewidth],4],
+    [[39*tilewidth,13*tilewidth],[39*tilewidth,38*tilewidth],4]
+  ];
+}
+
+window.onload = function () {
+  updateparameters();
   reset();
 
   //UPDATE CANVAS
   setInterval( function() {
     if(options.wall === true) {canvas.style.border = "2px dashed lightgreen"}
     else if (options.wall === false) {canvas.style.border = "2px solid #666"}
-    if (twoplayer) {
-      move(player);
-      move(player2);
-      draw(player,player2);
-      // if (player.double === true) {move(player);}
-      // if (player2.double === true) {move(player2);}
-    }
-    else if (!twoplayer) {
+    if (!twoplayer) {
       move(player);
       draw(player);
-      // if (!player.double === false) {move(player);}
+    }
+    else if (twoplayer) {
+      move(player,player2);
+      draw(player,player2);
     }
 		menu();
   },1000/fps);
@@ -75,11 +83,7 @@ window.onload = function () {
 
 window.onresize = function() {
   if (!play) {
-    for (var t = 50; (t < window.innerWidth * 0.8) && ( t < window.innerHeight * 0.8); t += 50) {
-      canvas.width = t;
-    }
-    canvas.height = canvas.width;
-    tilewidth = canvas.width/50;
+    updateparameters();
     reset();
   }
 }
@@ -106,7 +110,6 @@ function reset() {
   player.double = false;
 
   if (twoplayer) {
-    debugger;
     player2.x = canvas.width - 2 * tilewidth;
     player2.y = canvas.height - tilewidth;
     player2.md = 0;
@@ -128,20 +131,20 @@ function menu() {
 	 ctx.fillStyle = "black";
 	 ctx.textBaseline="middle";
 	 ctx.textAlign = "center";
-	 ctx.font= "30px Calibri";
+	 ctx.font = 10*tilewidth + "px Tahoma";
    ctx.fillStyle = options.scolor;
 	 ctx.fillText("SNAKE", canvas.width/2, canvas.height/2);
-   ctx.font = "12px Arial";
+   ctx.font = tilewidth + "px Arial";
    ctx.fillStyle = 'black';
-	 ctx.fillText("Singleplayer = E", canvas.width/2, canvas.height/2 + 24);
-	 ctx.fillText("Twoplayer = Z", canvas.width/2, canvas.height/2 + 38);
-   ctx.fillText("Hit Enter to pause the game.", canvas.width/2, canvas.height - 12);
-   ctx.fillText("Powerups on/off = P", canvas.width/2, canvas.height - 36);
+	 ctx.fillText("Singleplayer = E", canvas.width/2, canvas.height/2 + 5*tilewidth);
+	 ctx.fillText("Twoplayer = Z", canvas.width/2, canvas.height/2 + 6*tilewidth + 3);
+   ctx.fillText("Hit Enter to pause the game.", canvas.width/2, canvas.height - tilewidth);
+   ctx.fillText("Powerups on/off = P", canvas.width/2, canvas.height - 3*tilewidth);
    if (options.powerup === true) {
-     ctx.fillText("Powerups on!", canvas.width/2, canvas.height - 24);
+     ctx.fillText("Powerups on!", canvas.width/2, canvas.height - 2*tilewidth);
    }
    else if (options.powerup === false) {
-     ctx.fillText("Powerups off.", canvas.width/2, canvas.height - 24);
+     ctx.fillText("Powerups off.", canvas.width/2, canvas.height - 2*tilewidth);
    }
   }
 }
@@ -278,79 +281,102 @@ function snakegrow(figure,apple) {
   figure.snake.push([apple[0],apple[1]]);
 }
 
-function move(figure) {
- if (play == false || figure.stop > 0 || pause) {return;}
- else if (play) {
+//Check if position of poison powerup or apple is currently blocked
+function isblocked(x,y) {
+  if ((x == powerups[0][0] && y == powerups[0][1]) || (x == powerups[1][0] && y == powerups[1][1])) {
+    return true;
+  }
+}
 
-   //positionchange
-   figure.x += figure.md;
-   figure.x -= figure.ma;
-   figure.y += figure.ms;
-   figure.y -= figure.mw;
+function move() {
+  for (var a = 0; a < arguments.length; a++) {
+    if (play == false || pause) {return;}
+    if ( arguments[a].stop > 0) {continue;}
 
-   //colisionhandling
+    //positionchange
+    arguments[a].x += arguments[a].md;
+    arguments[a].x -= arguments[a].ma;
+    arguments[a].y += arguments[a].ms;
+    arguments[a].y -= arguments[a].mw;
+
+    //colisionhandling
 
     if (options.wall === true) {
-      if (figure.x < 0 || figure.x > canvas.width - tilewidth || figure.y < 0 || figure.y > canvas.height - tilewidth) {
+      if (arguments[a].x < 0 || arguments[a].x > canvas.width - tilewidth || arguments[a].y < 0 || arguments[a].y > canvas.height - tilewidth) {
         gameover = true;
         return;
       }
     }
 
     else if (options.wall === false) {
-      if (figure.x < 0) {figure.x = canvas.width - tilewidth;}
-      if (figure.x > canvas.width - tilewidth) {figure.x = 0;}
-
-      if (figure.y < 0) {figure.y = canvas.height - tilewidth;}
-      if (figure.y > canvas.height - tilewidth) {figure.y = 0;}
-
+      if (arguments[a].x < 0) {arguments[a].x = canvas.width - tilewidth;}
+      if (arguments[a].x > canvas.width - tilewidth) {arguments[a].x = 0;}
+      if (arguments[a].y < 0) {arguments[a].y = canvas.height - tilewidth;}
+      if (arguments[a].y > canvas.height - tilewidth) {arguments[a].y = 0;}
     }
 
-
-   // Move figure.snake: shift all bodypart positions to the position off the previous bodypart
-    for (var i = figure.snake.length - 1; i > 0; i--) {
-      figure.snake[i][0] = figure.snake[i-1][0];
-      figure.snake[i][1] = figure.snake[i-1][1];
-   }
-   // Set the position of the head to x and y
-    figure.snake[0][1] = figure.y;
-    figure.snake[0][0] = figure.x;
-
-   // Check if snake ate itself
-    for (var f = 4; f < figure.snake.length; f++) {
-       if (figure.snake[0][0] == figure.snake[f][0] && figure.snake[0][1] == figure.snake[f][1]) {
+    if (options.map != 1) {
+      for (var s = 0; s < collision.length; s++) {
+        if (arguments[a].x == collision[s][0] && arguments[a].y == collision[s][1]) {
           gameover = true;
-       }
+          return;
+        }
+      }
+    }
+
+   // Move arguments[a].snake: shift all bodypart positions to the position off the previous bodypart
+    for (var i = arguments[a].snake.length - 1; i > 0; i--) {
+      arguments[a].snake[i][0] = arguments[a].snake[i-1][0];
+      arguments[a].snake[i][1] = arguments[a].snake[i-1][1];
+    }
+    // Set the position of the head to x and y
+    arguments[a].snake[0][1] = arguments[a].y;
+    arguments[a].snake[0][0] = arguments[a].x;
+
+    // Check if snake ate itself
+    for (var f = 4; f < arguments[a].snake.length; f++) {
+      if (arguments[a].snake[0][0] == arguments[a].snake[f][0] && arguments[a].snake[0][1] == arguments[a].snake[f][1]) {
+        gameover = true;
+      }
     }
 
    //if the snake "eats" the apple get a new random position for the food and let the snake grow
-   for (var a = 0; a < apple.length; a++) {
-     if (figure.x == apple[a][0] && figure.y == apple[a][1]) {
-        score += 1;
-        for (var t = 0; t < 1; t++) {
-          snakegrow(figure,apple[a]);
-        }
-        // calculatepos(ax,ay);
-        ax = Math.floor(Math.random() * canvas.width / tilewidth) * tilewidth;
-        ay = Math.floor(Math.random() * canvas.height/ tilewidth) * tilewidth;
-        apple[a] = [];
-        apple[0][0] = ax;
-        apple[0][1] = ay;
+   for (var b = 0; b < apple.length; b++) {
+     if (arguments[a].x == apple[b][0] && arguments[a].y == apple[b][1]) {
+       score += 1;
+       for (var t = 0; t < 1; t++) {
+         snakegrow(arguments[a],apple[b]);
+       }
+       // calculatepos(ax,ay);
+       ax = Math.floor(Math.random() * canvas.width / tilewidth) * tilewidth;
+       ay = Math.floor(Math.random() * canvas.height/ tilewidth) * tilewidth;
 
-        if (options.poison === true) {
-          vx = Math.floor(Math.random() * canvas.width / tilewidth) * tilewidth;
-          vy = Math.floor(Math.random() * canvas.height/ tilewidth) * tilewidth;
-          poison.push([vx,vy]);
-        }
 
-        if (options.powerup === true){
-          if (Math.random() > 0.5) {
-            px = Math.floor(Math.random() * canvas.width / tilewidth) * tilewidth;
-            py = Math.floor(Math.random() * canvas.height/ tilewidth) * tilewidth;
-            powerups = [];
-            powerups[0] = [px,py,Math.floor((Math.random()*8) + 1)];
-            // powerups[0] = [px,py,2];
-            if (powerups[0][2] == 8) {powerups[1] = [canvas.width - px - tilewidth,canvas.height - py - tilewidth,8];}
+      //  while (!isblocked(ax,ay)) {
+      //    ax = Math.floor(Math.random() * canvas.width / tilewidth) * tilewidth;
+      //    ay = Math.floor(Math.random() * canvas.height/ tilewidth) * tilewidth;
+      //  }
+
+       // APPLES DONT GET DELETED!
+       apple[b] = [];
+
+       apple[0][0] = ax;
+       apple[0][1] = ay;
+
+       if (options.poison === true) {
+         vx = Math.floor(Math.random() * canvas.width / tilewidth) * tilewidth;
+         vy = Math.floor(Math.random() * canvas.height/ tilewidth) * tilewidth;
+         poison.push([vx,vy]);
+       }
+
+       if (options.powerup === true){
+         if (Math.random() > 0.5) {
+           px = Math.floor(Math.random() * canvas.width / tilewidth) * tilewidth;
+           py = Math.floor(Math.random() * canvas.height/ tilewidth) * tilewidth;
+           powerups = [];
+           powerups[0] = [px,py,Math.floor((Math.random()*8) + 1)];
+          //  powerups[0] = [px,py,9];
+           if (powerups[0][2] == 8) {powerups[1] = [canvas.width - px - tilewidth,canvas.height - py - tilewidth,8];}
           }
         }
       }
@@ -358,14 +384,14 @@ function move(figure) {
 
     if (options.poison === true) {
       for (var h = 0; h < poison.length; h++) {
-        if (figure.x == poison[h][0] && figure.y == poison[h][1]) {gameover = true;}
+        if (arguments[a].x == poison[h][0] && arguments[a].y == poison[h][1]) {gameover = true;}
       }
     }
 
     if (options.powerup === true) {
       for (var h = 0; h < powerups.length; h++) {
-        if (figure.x == powerups[h][0] && figure.y == powerups[h][1]) {
-          power(powerups[h][2],figure);
+        if (arguments[a].x == powerups[h][0] && arguments[a].y == powerups[h][1]) {
+          power(powerups[h][2],arguments[a]);
           return;
         }
       }
@@ -392,7 +418,7 @@ function power(index,figure) {
   }
   else if (index == 4) {
     if (figure == player) {player2.stop = fps*2;}
-    if (figure == player2) {player.stop = fps*2;}
+    if (figure == player2) {player.stop = fps*2; debugger;}
   }
   else if (index == 5) {
     if (options.poison === true) {options.poison = false; return;}
@@ -412,41 +438,37 @@ function power(index,figure) {
     if (figure.x == powerups[1][0] && figure.y == powerups[1][1]) {
       figure.x = powerups[0][0];
       figure.y = powerups[0][1];
-      return;}
-    else if (figure.x == powerups[0][0] && figure.y == powerups[0][1]) {
-      figure.x = powerups[1][0];
-      figure.y = powerups[1][1];
-      return;}
+      return;
+    }
+
+  else if (figure.x == powerups[0][0] && figure.y == powerups[0][1]) {
+    figure.x = powerups[1][0];
+    figure.y = powerups[1][1];
+    return;}
   }
   else if (index == 9) {
-    // canvas.width += 100;
-    // canvas.height += 100;
-
+    canvas.style.transform = "rotate(3600deg)";
   }
 }
-
-// function calculatepos(x,y) {
-//   x = Math.floor(Math.random() * canvas.width / tilewidth) * tilewidth;
-//   y = Math.floor(Math.random() * canvas.height/ tilewidth) * tilewidth;
-// }
 
 function draw() {
   ctx.fillStyle = options.bg;
   ctx.fillRect(0,0,canvas.width,canvas.height);
-  if (options.map == 2) {
-    ctx.fillStyle = options.ocolor;
-    ctx.fillRect(5*tilewidth,5*tilewidth,canvas.width-10*tilewidth,tilewidth);
-  }
-
   document.getElementById('score').innerHTML = score;
+  drawmap();
   if (gameover) {
-    ctx.fillStyle = "black";
+    ctx.fillStyle = options.bg;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = "red";
     ctx.textBaseline="middle";
     ctx.textAlign = "center";
+    ctx.font = tilewidth*3 + "px Arial";
     ctx.fillText("GAME OVER!", canvas.width/2, canvas.height/2);
-    ctx.fillText("You have reached following score: " + score, canvas.width/2, canvas.height/2 + 12);
-    ctx.fillText("Press the spacebar to play again.", canvas.width/2, canvas.height - 12);
-    ctx.fillText("Press M to get back to the menu.", canvas.width/2, canvas.height - 24);
+    ctx.font = tilewidth + "px Arial";
+    ctx.fillStyle = "black";
+    ctx.fillText("You have reached following score: " + score, canvas.width/2, canvas.height/2 + tilewidth*2);
+    ctx.fillText("Press the spacebar to play again.", canvas.width/2, canvas.height - tilewidth);
+    ctx.fillText("Press M to get back to the menu.", canvas.width/2, canvas.height - tilewidth*2);
   }
 
   else if (!gameover){
@@ -501,9 +523,9 @@ function draw() {
        ctx.moveTo(arguments[1].snake[0][0] - radius * tilewidth,arguments[1].snake[0][1] - radius * tilewidth);
        ctx.rect(arguments[1].snake[0][0] - radius * tilewidth,arguments[1].snake[0][1] - radius * tilewidth, ((2* radius)+1) * tilewidth, ((2* radius)+1) * tilewidth);
       }
+      ctx.fill('evenodd');
     }
 
-    ctx.fill('evenodd');
     ctx.fillStyle = options.scolor;
     for (var k = 0; k < arguments.length; k++) {
       for (var i = 0; i < arguments[k].snake.length; i++) {
@@ -514,33 +536,31 @@ function draw() {
   }
 }
 
-//   ctx.fillStyle = "black";
-//   if (arguments.length == 1) {
-//     ctx.fillRect(0,0,arguments[0].snake[0][0] - radius *tilewidth,canvas.height);
-//     ctx.fillRect(arguments[0].snake[0][0] + (radius + 1) *tilewidth,0,canvas.width,canvas.height);
-//     ctx.fillRect(0,0,canvas.width,arguments[0].snake[0][1] - radius *tilewidth);
-//     ctx.fillRect(0,arguments[0].snake[0][1] + (radius + 1) *tilewidth,canvas.width,canvas.height);
-//     // ctx.clearRect(arguments[k].snake[0][0] - 2 *tilewidth,arguments[k].snake[0][1] - 2 * tilewidth,5*tilewidth,5*tilewidth)
-//   }
-//   else if (arguments.length == 2) {
-//     var top,down;
-//     if (arguments[0].snake[0][1] < arguments[1].snake[0][1]) {top = 0; down = 1;}
-//     else {top = 1; down = 0;}
-//
-//     ctx.fillRect(0,0,canvas.width,arguments[top].snake[0][1] - radius *tilewidth);
-//     if ((arguments[down].snake[0][1] - radius *tilewidth) - (arguments[top].snake[0][1] + radius *tilewidth) > 0) {
-//       ctx.fillRect(0,arguments[top].snake[0][1] + radius *tilewidth,canvas.width,(arguments[down].snake[0][1] - radius *tilewidth) - (arguments[top].snake[0][1] + radius *tilewidth))
-//     }
-//     ctx.fillRect(0,arguments[down].snake[0][1] + radius *tilewidth,canvas.width,canvas.height);
-//
-//     var right,left;
-//     if (arguments[0].snake[0][0] < arguments[1].snake[0][0]) {right = 0; left = 1}
-//     else {right = 1; left = 0;}
-//
-//     ctx.fillRect(0,0,arguments[right].snake[0][0] - radius *tilewidth,canvas.height);
-//     if ((arguments[left].snake[0][0] - radius *tilewidth) - (arguments[right].snake[0][0] + radius *tilewidth) > 0) {
-//       ctx.fillRect(arguments[right].snake[0][0] + radius *tilewidth,0,(arguments[left].snake[0][0] - radius *tilewidth) - (arguments[right].snake[0][0] + radius *tilewidth),canvas.height)
-//     }
-//     ctx.fillRect(arguments[left].snake[0][0] + radius *tilewidth,0,canvas.width,canvas.height);
-//   }
-//  }
+function drawmap() {
+  if (options.map != 1) {
+    var map = window['map' + options.map];
+    for (var b = 0; b < map.length; b++) {
+      for (var w = map[b][0][0]; w < map[b][1][0]; w += tilewidth) {
+        if (map[b][3] == 0) {
+         ctx.fillStyle = "black";
+         ctx.fillRect(w,map[b][0][1],tilewidth,tilewidth);
+         collision.push([w,map[b][0][1]]);
+        }
+        // else {powerups.push([w,map[b][0][1]],map[b][3]);}
+      }
+      for (var h = map[b][0][1]; h < map[b][1][1]; h += tilewidth) {
+        if (map[b][3] == 0) {
+         ctx.fillStyle = "black";
+         ctx.fillRect(map[b][0][0],h,tilewidth,tilewidth);
+         collision.push([map[b][0][0],h]);
+        }
+        // else {powerups.push([map[b][0][0],h,map[b][3]]);}
+      }
+    }
+  }
+}
+
+// var r = Math.random() * 255;
+// var g = Math.random() * 255;
+// var c = Math.random() * 255;
+// ctx.fillStyle = 'rgb(' + r  +  g + c + ')';
