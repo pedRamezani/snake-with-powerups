@@ -17,5 +17,5 @@ Use the arrows to controll your snake
 - ![#ffff00](https://placehold.it/15/ffff00/000000?text=+) `Creates a apple at every position your snake currently is.`
 - ![#00ff00](https://placehold.it/15/00ff00/000000?text=+) `Only twoplayer: Stops the other player.`
 - ![#ff00ff](https://placehold.it/15/ff00ff/000000?text=+) `Diagonal moves.`
-- ![#008000](https://placehold.it/15/008000/000000?text=+) `Teleporte.r`
+- ![#008000](https://placehold.it/15/008000/000000?text=+) `Teleporter.`
 - ![#ff0000](https://placehold.it/15/ff0000/000000?text=+) `Apple.`
